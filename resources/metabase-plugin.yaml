@@ -1,0 +1,39 @@
+info:
+  name: Metabase Databricks Spark SQL Driver
+  version: 1.0.0-SNAPSHOT
+  description: Allows Metabase to connect to Databricks Spark SQL databases.
+driver:
+  - name: hive-like
+    lazy-load: true
+    abstract: true
+    parent: sql-jdbc
+  - name: sparksql-databricks
+    display-name: Spark SQL (Databricks)
+    lazy-load: true
+    parent: hive-like
+    connection-properties:
+      - merge:
+          - host
+          - placeholder: '<account>.cloud.databricks.com'
+      - merge:
+          - port
+          - default: 443
+      - merge:
+          - dbname
+          - placeholder: default
+      - merge:
+          -  user
+          - default: token
+      - merge:
+          - password
+          - placeholder: '<user_token>'
+      - merge:
+          - additional-options
+          - name: jdbc-flags
+            placeholder: ';transportMode=http;ssl=1;httpPath=<cluster-http-path>;AuthMech=3;UID=token;PWD=<token>'
+    connection-properties-include-tunnel-config: false
+init:
+  - step: load-namespace
+    namespace: metabase.driver.sparksql-databricks
+  - step: register-jdbc-driver
+    class: metabase.driver.FixedSparkDriver
