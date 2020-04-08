@@ -1,5 +1,5 @@
-FROM metabase/metabase-head:latest
+FROM metabase/metabase:v0.35.1
 
 ENV MB_DB_CONNECTION_TIMEOUT_MS=60000
 
-COPY sparksql-databricks.metabase-driver.jar /app/plugins/
+COPY sparksql-databricks.metabase-driver.jar /plugins/
