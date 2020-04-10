@@ -1,12 +1,12 @@
 # Metabase Driver: Spark Databricks
 
-All you need you do is drop the driver in your `plugins/` directory. You can grab it [here](https://github.com/relferreira/metabase-sparksql-databricks-driver/releases/download/1.1.0/sparksql-databricks.metabase-driver.jar) or build it yourself:
+All you need you do is drop the driver in your `plugins/` directory. You can grab it [here](https://github.com/ifood/metabase-sparksql-databricks-driver/releases/download/1.1.0/sparksql-databricks.metabase-driver.jar) or build it yourself:
 
 ## Building the driver (the fast way)
 
 Use the `Dockerfile` on this repo:
 
-- `curl -L "https://github.com/relferreira/metabase-sparksql-databricks-driver/releases/download/1.1.0/sparksql-databricks.metabase-driver.jar" -o sparksql-databricks.metabase-driver.jar`
+- `curl -L "https://github.com/ifood/metabase-sparksql-databricks-driver/releases/download/1.1.0/sparksql-databricks.metabase-driver.jar" -o sparksql-databricks.metabase-driver.jar`
 - `docker build -t metabase:metabase-head-databricks-1.1.0 .`
 
 And you can deploy to some docker registry of your own and use the image!
