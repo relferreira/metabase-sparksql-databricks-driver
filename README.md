@@ -1,6 +1,9 @@
 # Metabase Driver: Spark Databricks
 
-All you need you do is drop the driver in your `plugins/` directory. You can grab it [here](https://github.com/ifood/metabase-sparksql-databricks-driver/releases/download/1.0.0/sparksql-databricks.metabase-driver.jar) or build it yourself:
+>### ***This project fork upgrades the Metabase plugin for Databricks to use latest Simba JDBC 42 driver and adds support to connect to Databricks SQL compute endpoints***
+
+
+All you need you do is build and drop the driver in your Metabase `plugins/` directory.
 
 ## Building the driver (the fast way)
 
@@ -36,6 +39,7 @@ DEBUG=1 LEIN_SNAPSHOTS_IN_RELEASE=true lein uberjar
 ```
 
 ### Copy it to your plugins dir and restart Metabase
+
 ```bash
 mkdir -p /path/to/metabase/plugins/
 cp target/uberjar/sparksql-databricks.metabase-driver.jar /path/to/metabase/plugins/
