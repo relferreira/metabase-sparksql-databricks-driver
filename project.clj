@@ -1,4 +1,4 @@
-(defproject metabase/sparksql-databricks-driver "1.0.0"
+(defproject metabase/sparksql-databricks-driver "1.2.0"
   :min-lein-version "2.5.0"
 
   :plugins [[s3-wagon-private "1.3.4"]]
