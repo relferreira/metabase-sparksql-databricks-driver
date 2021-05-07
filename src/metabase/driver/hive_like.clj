@@ -97,9 +97,9 @@
   (hsql/call :date_sub
     (hx/+ (hx/->timestamp expr)
           (hsql/raw "interval '1' day"))
-    (date-format "u"
+    (hx/->integer (date-format "u"
                  (hx/+ (hx/->timestamp expr)
-                       (hsql/raw "interval '1' day")))))
+                       (hsql/raw "interval '1' day"))))))
 
 (defmethod sql.qp/date [:hive-like :quarter]
   [_ _ expr]
