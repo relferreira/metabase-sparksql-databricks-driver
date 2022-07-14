@@ -12,7 +12,7 @@
             [metabase.connection-pool :as pool]
             [metabase.driver :as driver]
             [metabase.driver.hive-like :as hive-like]
-            [metabase.driver.hive-like.fixed-hive-connection :as fixed-hive-connection]
+            ;; [metabase.driver.hive-like.fixed-hive-connection :as fixed-hive-connection]
             [metabase.driver.sql-jdbc.connection :as sql-jdbc.conn]
             [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
             [metabase.driver.sql-jdbc.sync :as sql-jdbc.sync]
