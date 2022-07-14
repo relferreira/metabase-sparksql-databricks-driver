@@ -1,11 +1,11 @@
 (defproject metabase/sparksql-databricks-driver "1.0.0"
   :min-lein-version "2.5.0"
 
-  :repositories [["bintray" "https://dl.bintray.com/ifood/third"]]
+  :repositories {"project" "file:repo"}
 
   :dependencies
   [
-   [simba/simba-spark-jdbc41 "2.6.3.1003"]
+   [local/simba-spark-jdbc42 "2.6.22"]
   ]
 
   ;; only used for the lein with-drivers stuff (i.e. tests and REPL)
@@ -14,7 +14,11 @@
   :profiles
   {:provided
    {:dependencies
-    [[metabase-core "1.0.0-SNAPSHOT"]]}
+    [
+      [metabase-core "1.0.0-SNAPSHOT"]
+      [clojure.java-time "0.3.1"]
+    ]
+    }
 
    :uberjar
    {:auto-clean    true
