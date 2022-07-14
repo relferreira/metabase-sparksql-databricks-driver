@@ -3,14 +3,11 @@
 
   :plugins [[s3-wagon-private "1.3.4"]]
 
-  :repositories [
-    ["releases" {:url "s3p://<s3_bucket>/maven/releases/" :no-auth true :sign-releases false}]
-    ["snapshots" {:url "s3p://<s3_bucket>/maven/snapshots/" :no-auth true}]
-  ]
+  :repositories {"project" "file:repo"}
 
   :dependencies
   [
-   [simba/simba-spark-jdbc42 "2.6.17.1021"]
+   [local/simba-spark-jdbc42 "2.6.22"]
   ]
 
   ;; only used for the lein with-drivers stuff (i.e. tests and REPL)
