@@ -18,7 +18,7 @@ docker build -t metabase:metabase-head-databricks-1.3.0 .
 And you can deploy to some docker registry of your own and use the image!
 
 Example of running:
-- `docker run -d -p 3000:3000 --name metabase metabase:metabase-head-databricks-1.2.0`
+- `docker run -d -p 3000:3000 --name metabase metabase:metabase-head-databricks-1.3.0`
 
 And access `http://localhost:3000`.
 
