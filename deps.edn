@@ -1,7 +1,6 @@
 {:paths
  ["src" "resources"]
 
- :repositories {"project" "file:repo"}
  :mvn/local-repo "./repo"
 
  :deps
