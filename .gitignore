@@ -64,3 +64,4 @@ target/checksum.txt
 .idea/
 /local/src
 .java-version
+repo
