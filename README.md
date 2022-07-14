@@ -18,6 +18,17 @@ And access `http://localhost:3000`.
 
 ## Building the driver (advanced way)
 
+### Download Simba Spark Driver
+
+Download the simba spark driver version 2.6.22 at [Databricks download page](https://databricks.com/spark/jdbc-drivers-archive) and move the `SparkJDBC42.jar` file to the `/driver` folder at the root of the project. 
+After that, install this dependency using the following command:
+
+```bash
+mvn deploy:deploy-file -DgroupId=local -DartifactId=simba-spark-jdbc42 \
+    -Dversion=2.6.3 -Dpackaging=jar -Dfile=driver/SparkJDBC42.jar \
+    -Durl=file:repo
+```
+
 ### Prereq: Install Metabase as a local maven dependency, compiled for building drivers
 
 Clone the [Metabase repo](https://github.com/metabase/metabase) first if you haven't already done so.
