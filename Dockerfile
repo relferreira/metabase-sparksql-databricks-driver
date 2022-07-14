@@ -1,4 +1,4 @@
-FROM metabase/metabase:v0.38.6
+FROM metabase/metabase:v0.41.6
 
 ENV MB_DB_CONNECTION_TIMEOUT_MS=60000
 

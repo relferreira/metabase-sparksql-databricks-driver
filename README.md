@@ -37,7 +37,7 @@ Clone the [Metabase repo](https://github.com/metabase/metabase) first if you hav
 
 ```bash
 cd /path/to/metabase/
-lein install-for-building-drivers
+./bin/build-drivers.sh
 ```
 
 ### Build the Spark Databricks driver
