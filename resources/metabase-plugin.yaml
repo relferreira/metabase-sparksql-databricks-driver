@@ -14,7 +14,7 @@ driver:
     connection-properties:
       - merge:
           - host
-          - placeholder: '<account>.cloud.databricks.com'
+          - placeholder: "<account>.cloud.databricks.com"
       - merge:
           - port
           - default: 443
@@ -22,15 +22,17 @@ driver:
           - dbname
           - placeholder: default
       - merge:
-          -  user
+          - user
           - default: token
       - merge:
           - password
-          - placeholder: '<user_token>'
+          - placeholder: "<user_token>"
+      - advanced-options-start
       - merge:
           - additional-options
           - name: jdbc-flags
-            placeholder: ';transportMode=http;ssl=1;httpPath=<cluster-http-path>;AuthMech=3;UID=token;PWD=<token>'
+            placeholder: ";transportMode=http;ssl=1;httpPath=<cluster-http-path>;AuthMech=3;UID=token;PWD=<token>"
+      - default-advanced-options
     connection-properties-include-tunnel-config: false
 init:
   - step: load-namespace

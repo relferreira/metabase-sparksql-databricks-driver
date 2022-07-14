@@ -65,3 +65,4 @@ target/checksum.txt
 /local/src
 .java-version
 repo
+.cpcache

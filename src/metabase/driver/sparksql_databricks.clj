@@ -1,28 +1,29 @@
 (ns metabase.driver.sparksql-databricks
-  (:require [clojure
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str]
+            [clojure
              [set :as set]
              [string :as str]]
-            [clojure.java.jdbc :as jdbc]
-            [honeysql
-             [core :as hsql]
-             [helpers :as h]]
+            [honeysql.core :as hsql]
+            [honeysql.helpers :as h]
             [medley.core :as m]
+            [metabase.driver.sql-jdbc
+             [common :as sql-jdbc.common]]
+            [metabase.connection-pool :as pool]
             [metabase.driver :as driver]
             [metabase.driver.hive-like :as hive-like]
-            [metabase.driver.sql
-             [query-processor :as sql.qp]
-             [util :as sql.u]]
-            [metabase.driver.sql-jdbc
-             [common :as sql-jdbc.common]
-             [connection :as sql-jdbc.conn]
-             [execute :as sql-jdbc.execute]
-             [sync :as sql-jdbc.sync]]
+            ;; [metabase.driver.hive-like.fixed-hive-connection :as fixed-hive-connection]
+            [metabase.driver.sql-jdbc.connection :as sql-jdbc.conn]
+            [metabase.driver.sql-jdbc.execute :as sql-jdbc.execute]
+            [metabase.driver.sql-jdbc.sync :as sql-jdbc.sync]
+            [metabase.driver.sql.parameters.substitution :as params.substitution]
+            [metabase.driver.sql.query-processor :as sql.qp]
+            [metabase.driver.sql.util :as sql.u]
             [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase.mbql.util :as mbql.u]
-            [metabase.models.field :refer [Field]]
-            [metabase.query-processor
-             [store :as qp.store]
-             [util :as qputil]]
+            [metabase.query-processor.store :as qp.store]
+            [metabase.query-processor.util :as qputil]
+            [metabase.query-processor.util.add-alias-info :as add]
             [metabase.util.honeysql-extensions :as hx])
   (:import [java.sql Connection ResultSet]))
 
@@ -34,11 +35,33 @@
   "Default alias for all source tables. (Not for source queries; those still use the default SQL QP alias of `source`.)"
   "t1")
 
-;; use `source-table-alias` for the source Table, e.g. `t1.field` instead of the normal `schema.table.field`
-(defmethod sql.qp/->honeysql [:sparksql-databricks (class Field)]
-  [driver field]
-  (binding [sql.qp/*table-alias* (or sql.qp/*table-alias* source-table-alias)]
-    ((get-method sql.qp/->honeysql [:hive-like (class Field)]) driver field)))
+;; ;; use `source-table-alias` for the source Table, e.g. `t1.field` instead of the normal `schema.table.field`
+;; (defmethod sql.qp/->honeysql [:sparksql-databricks :field]
+;;   [driver field]
+;;   (binding [sql.qp/*table-alias* (or sql.qp/*table-alias* source-table-alias)]
+;;     ((get-method sql.qp/->honeysql [:hive-like :field]) driver field)))
+
+
+(defmethod sql.qp/->honeysql [:sparksql-databricks :field]
+  [driver [_ _ {::params.substitution/keys [compiling-field-filter?]} :as field-clause]]
+  ;; use [[source-table-alias]] instead of the usual `schema.table` to qualify fields e.g. `t1.field` instead of the
+  ;; normal `schema.table.field`
+  (let [parent-method (get-method sql.qp/->honeysql [:hive-like :field])
+        field-clause  (mbql.u/update-field-options field-clause
+                                                   update
+                                                   ::add/source-table
+                                                   (fn [source-table]
+                                                     (cond
+                                                       ;; DO NOT qualify fields from field filters with `t1`, that won't
+                                                       ;; work unless the user-written SQL query is doing the same
+                                                       ;; thing.
+                                                       compiling-field-filter? ::add/none
+                                                       ;; for all other fields from the source table qualify them with
+                                                       ;; `t1`
+                                                       (integer? source-table) source-table-alias
+                                                       ;; no changes for anyone else.
+                                                       :else                   source-table)))]
+    (parent-method driver field-clause)))
 
 (defmethod sql.qp/apply-top-level-clause [:sparksql-databricks :page] [_ _ honeysql-form {{:keys [items page]} :page}]
   (let [offset (* (dec page) items)]
