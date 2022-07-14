@@ -1,8 +1,6 @@
 (defproject metabase/sparksql-databricks-driver "1.2.0"
   :min-lein-version "2.5.0"
 
-  :plugins [[s3-wagon-private "1.3.4"]]
-
   :repositories {"project" "file:repo"}
 
   :dependencies
@@ -19,7 +17,8 @@
     [
       [metabase-core "1.0.0-SNAPSHOT"]
       [clojure.java-time "0.3.1"]
-    ]}
+    ]
+    }
 
    :uberjar
    {:auto-clean    true
