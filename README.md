@@ -25,7 +25,7 @@ After that, install this dependency using the following command:
 
 ```bash
 mvn deploy:deploy-file -DgroupId=local -DartifactId=simba-spark-jdbc42 \
-    -Dversion=2.6.3 -Dpackaging=jar -Dfile=driver/SparkJDBC42.jar \
+    -Dversion=2.6.27 -Dpackaging=jar -Dfile=driver/SparkJDBC42.jar \
     -Durl=file:repo
 ```
 
