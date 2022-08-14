@@ -102,7 +102,7 @@
     :as   opts}]
   (merge
    {:classname   "metabase.driver.FixedSparkDriver"
-    :subprotocol "spark"
+    :subprotocol "databricks"
     :subname     (str "//" host ":" port "/" db jdbc-flags)}
    (dissoc opts :host :port :jdbc-flags)))
 
@@ -148,8 +148,8 @@
      (let [results (jdbc/query {:connection conn} [(format
                                                     "describe %s"
                                                     (sql.u/quote-name driver :table
-                                                      (dash-to-underscore schema)
-                                                      (dash-to-underscore table-name)))])]
+                                                                      (dash-to-underscore schema)
+                                                                      (dash-to-underscore table-name)))])]
        (set
         (for [[idx {col-name :col_name, data-type :data_type, :as result}] (m/indexed results)
               :when (valid-describe-table-row? result)]

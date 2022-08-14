@@ -1,5 +1,7 @@
 # Metabase Driver: Spark Databricks
 
+**Support**: This driver currently only works with Databricks Cluster's Endpoint. SQL Warehouse Endpoints are not supported yet.
+
 **Credits**: This repository is only an updated version of the work of Fernando Goncalves and Rajesh Kumar Ravi. 
 
 All you need you do is drop the driver in your `plugins/` directory. You can grab it [here](https://github.com/relferreira/metabase-sparksql-databricks-driver/releases/download/1.3.0/sparksql-databricks.metabase-driver.jar) or build it yourself:
@@ -23,17 +25,6 @@ Example of running:
 And access `http://localhost:3000`.
 
 ## Building the driver (advanced way)
-
-### Prereq: Download Simba Spark Driver
-
-Download the simba spark driver version 2.6.22 at [Databricks download page](https://databricks.com/spark/jdbc-drivers-archive) and move the `SparkJDBC42.jar` file to the `/driver` folder at the root of the project. 
-After that, install this dependency using the following command:
-
-```bash
-mvn deploy:deploy-file -DgroupId=local -DartifactId=simba-spark-jdbc42 \
-    -Dversion=2.6.27 -Dpackaging=jar -Dfile=driver/SparkJDBC42.jar \
-    -Durl=file:repo
-```
 
 ### Prereq: Install Metabase as a local maven dependency, compiled for building drivers
 

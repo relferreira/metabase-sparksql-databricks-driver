@@ -1,6 +1,6 @@
 (ns metabase.driver.FixedSparkDriver
   (:gen-class
-   :extends com.simba.spark.jdbc.Driver
+   :extends com.databricks.client.jdbc.Driver
    :exposes-methods {connect superConnect}
    :init init
    :prefix "driver-"
@@ -14,5 +14,5 @@
 
 (defn driver-connect
   "Connects to a Spark database, fixing the connection to with Metabase"
-  [^com.simba.spark.jdbc.Driver this, ^String url, ^java.util.Properties info]
+  [^com.databricks.client.jdbc.Driver this, ^String url, ^java.util.Properties info]
   (connection/decorate-and-fix (.superConnect this url info)))

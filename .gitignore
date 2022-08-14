@@ -66,3 +66,5 @@ target/checksum.txt
 .java-version
 repo
 .cpcache
+.lsp
+.clj-kondo

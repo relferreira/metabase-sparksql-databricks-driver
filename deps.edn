@@ -1,15 +1,12 @@
 {:paths
  ["src" "resources"]
 
- :mvn/local-repo "./repo"
-
  :deps
  {org.clojure/core.logic {:mvn/version "1.0.0"}
- local/simba-spark-jdbc42 {:mvn/version "2.6.27"}}
+  com.databricks/databricks-jdbc {:mvn/version "2.6.27"}}
 
  :aliases
- {
-  ;; work on the driver locally with clojure -M:build
+ {;; work on the driver locally with clojure -M:build
   :dev
   {:extra-deps {metabase/metabase-core       {:local/root "../metabase"}
                 ;; com.github.metabase/metabase {:git/sha "57c7bbe618d7bd573494be18bda6e1d5a6846e2b"}
