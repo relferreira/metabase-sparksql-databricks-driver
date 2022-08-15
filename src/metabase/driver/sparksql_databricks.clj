@@ -63,7 +63,8 @@
                                                        :else                   source-table)))]
     (parent-method driver field-clause)))
 
-(defmethod sql.qp/apply-top-level-clause [:sparksql-databricks :page] [_ _ honeysql-form {{:keys [items page]} :page}]
+(defmethod sql.qp/apply-top-level-clause [:sparksql-databricks :page]
+  [_ _ honeysql-form {{:keys [items page]} :page}]
   (let [offset (* (dec page) items)]
     (if (zero? offset)
       ;; if there's no offset we can simply use limit
@@ -104,7 +105,7 @@
    {:classname   "metabase.driver.FixedSparkDriver"
     :subprotocol "databricks"
     :subname     (str "//" host ":" port "/" db jdbc-flags)}
-   (dissoc opts :host :port :jdbc-flags)))
+   (dissoc opts :host :port :db :jdbc-flags)))
 
 (defmethod sql-jdbc.conn/connection-details->spec :sparksql-databricks
   [_ details]
@@ -114,6 +115,7 @@
                         (Integer/parseInt port)
                         port)))
       (set/rename-keys {:dbname :db})
+      (select-keys [:host :port :db :jdbc-flags :dbname])
       sparksql-databricks
       (sql-jdbc.common/handle-additional-options details)))
 
@@ -123,14 +125,14 @@
 
 ;; workaround for SPARK-9686 Spark Thrift server doesn't return correct JDBC metadata
 (defmethod driver/describe-database :sparksql-databricks
-  [_ {:keys [details] :as database}]
+  [_ database]
   {:tables
    (with-open [conn (jdbc/get-connection (sql-jdbc.conn/db->pooled-connection-spec database))]
      (set
-      (for [{:keys [database tablename tab_name]} (jdbc/query {:connection conn} ["show tables"])]
+      (for [{:keys [database tablename tab_name], table-namespace :namespace} (jdbc/query {:connection conn} ["show tables"])]
         {:name   (or tablename tab_name) ; column name differs depending on server (SparkSQL, hive, Impala)
-         :schema (when (seq database)
-                   database)})))})
+         :schema (or (not-empty database)
+                     (not-empty table-namespace))})))})
 
 ;; Hive describe table result has commented rows to distinguish partitions
 (defn- valid-describe-table-row? [{:keys [col_name data_type]}]
@@ -140,7 +142,7 @@
 
 ;; workaround for SPARK-9686 Spark Thrift server doesn't return correct JDBC metadata
 (defmethod driver/describe-table :sparksql-databricks
-  [driver {:keys [details] :as database} {table-name :name, schema :schema, :as table}]
+  [driver database {table-name :name, schema :schema}]
   {:name   table-name
    :schema schema
    :fields
@@ -160,7 +162,7 @@
 
 ;; bound variables are not supported in Spark SQL (maybe not Hive either, haven't checked)
 (defmethod driver/execute-reducible-query :sparksql-databricks
-  [driver {:keys [database settings], {sql :query, :keys [params], :as inner-query} :native, :as outer-query} context respond]
+  [driver {{sql :query, :keys [params], :as inner-query} :native, :as outer-query} context respond]
   (let [inner-query (-> (assoc inner-query
                                :remark (qputil/query->remark :sparksql-databricks outer-query)
                                :query  (if (seq params)
@@ -177,8 +179,8 @@
 ;; 3.  SparkSQL doesn't support making connections read-only
 ;; 4.  SparkSQL doesn't support setting the default result set holdability
 (defmethod sql-jdbc.execute/connection-with-timezone :sparksql-databricks
-  [driver database ^String timezone-id]
-  (let [conn (.getConnection (sql-jdbc.execute/datasource database))]
+  [driver database _timezone-id]
+  (let [conn (.getConnection (sql-jdbc.execute/datasource-with-diagnostic-info! driver database))]
     (try
       (.setTransactionIsolation conn Connection/TRANSACTION_READ_UNCOMMITTED)
       conn
@@ -199,6 +201,9 @@
       (catch Throwable e
         (.close stmt)
         (throw e)))))
+
+;; the current HiveConnection doesn't support .createStatement
+(defmethod sql-jdbc.execute/statement-supported? :sparksql-databricks [_] false)
 
 (doseq [feature [:basic-aggregations
                  :binning
