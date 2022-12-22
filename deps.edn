@@ -3,7 +3,7 @@
 
  :deps
  {org.clojure/core.logic {:mvn/version "1.0.0"}
-  com.databricks/databricks-jdbc {:mvn/version "2.6.27"}}
+  com.databricks/databricks-jdbc {:mvn/version "2.6.32"}}
 
  :aliases
  {;; work on the driver locally with clojure -M:build
