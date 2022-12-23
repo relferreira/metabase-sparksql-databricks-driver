@@ -4,7 +4,7 @@
 
 ## Installation
 
-All you need you do is drop the driver in your `plugins/` directory. You can grab it [here](https://github.com/relferreira/metabase-sparksql-databricks-driver/releases/download/1.4.0/sparksql-databricks.metabase-driver.jar) or build it yourself:
+All you need you do is drop the driver in your `plugins/` directory. You can grab it [here](https://github.com/relferreira/metabase-sparksql-databricks-driver/releases/download/1.6.0/sparksql-databricks.metabase-driver.jar) or build it yourself:
 
 ## Connecting
 
