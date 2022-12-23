@@ -27,9 +27,6 @@ All you need you do is drop the driver in your `plugins/` directory. You can gra
 Use the `Dockerfile` on this repo:
 
 ```bash
-curl -L "https://github.com/relferreira/metabase-sparksql-databricks-driver/releases/download/1.6.0/sparksql-databricks.metabase-driver.jar" -o sparksql-databricks.metabase-driver.jar
-mkdir target
-mv sparksql-databricks.metabase-driver.jar target/
 docker build -t metabase:metabase-head-databricks-1.3.0 .
 ```
 
@@ -37,7 +34,9 @@ And you can deploy to some docker registry of your own and use the image!
 
 Example of running:
 
-- `docker run -d -p 3000:3000 --name metabase metabase:metabase-head-databricks-1.6.0`
+```bash
+docker run -d -p 3000:3000 --name metabase metabase:metabase-head-databricks-1.6.0
+```
 
 And access `http://localhost:3000`.
 
