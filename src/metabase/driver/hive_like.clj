@@ -1,6 +1,5 @@
 (ns metabase.driver.hive-like
   (:require [buddy.core.codecs :as codecs]
-            [clojure.string :as str]
             [honeysql.core :as hsql]
             [java-time :as t]
             [metabase.driver :as driver]
@@ -12,6 +11,7 @@
             [metabase.driver.sql.util :as sql.u]
             [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase.models.table :refer [Table]]
+            [metabase.util :as u]
             [metabase.util.date-2 :as u.date]
             [metabase.util.honeysql-extensions :as hx]
             [toucan.db :as db])
@@ -36,7 +36,7 @@
 
 (defmethod sql-jdbc.sync/database-type->base-type :hive-like
   [_ database-type]
-  (condp re-matches (str/lower-case (name database-type))
+  (condp re-matches (u/lower-case-en (name database-type))
     #"boolean"          :type/Boolean
     #"tinyint"          :type/Integer
     #"smallint"         :type/Integer
