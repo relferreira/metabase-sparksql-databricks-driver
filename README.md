@@ -4,9 +4,28 @@
 
 ## Installation
 
-All you need you do is drop the driver in your `plugins/` directory. You can grab it [here](https://github.com/relferreira/metabase-sparksql-databricks-driver/releases/download/1.6.0/sparksql-databricks.metabase-driver.jar) or build it yourself:
+To build a dockerized Metabase including the Databricks driver from this repository, simply run:
 
-## Connecting
+```
+docker build -t metabase:0.45.2-db -f Dockerfile .
+```
+
+The Metabase Databricks driver gets build along the way and included in the image while building the Metabase docker image.
+
+To run the tests for this driver, run the following:
+
+```
+docker build -t metabase/databricks-test --target stg_test .
+docker run --rm --name mb-test metabase/databricks-test
+```
+
+or, if you have Clojure on your local machine, just:
+
+```
+clojure -X:test
+```
+
+# Connecting
 
 ## Parameters
 

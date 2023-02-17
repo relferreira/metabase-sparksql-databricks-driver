@@ -1,5 +1,5 @@
 #Copied from https://github.com/dacort/metabase-athena-driver/blob/d7572cd99551ea998a011f8f00a1e39c1eaa59b8/Dockerfile
-ARG METABASE_VERSION=v0.45.1
+ARG METABASE_VERSION=v0.45.2
 
 FROM clojure:openjdk-11-tools-deps-slim-buster AS stg_base
 
@@ -43,6 +43,12 @@ RUN --mount=type=cache,target=/root/.m2/repository \
     clojure -X:deps prep
 WORKDIR /build/driver
 
+# Test stage
+FROM stg_base as stg_test
+COPY test/ ./test
+RUN clojure -X:test:deps prep
+# Some dependencies still get downloaded when the command below is run, but I'm not sure why
+CMD ["clojure", "-X:test"]
 
 # Now build the driver
 FROM stg_base as stg_build
