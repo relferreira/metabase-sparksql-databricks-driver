@@ -135,7 +135,12 @@
 
 (defmethod sql.qp/add-interval-honeysql-form :hive-like
   [_ hsql-form amount unit]
-  (hx/+ (hx/->timestamp hsql-form) (hsql/raw (format "(INTERVAL '%d' %s)" (int amount) (name unit)))))
+  ( let [
+      interval (if (= unit :quarter) 
+        {:amount (* 3 (int amount)), :unit "month"}
+        {:amount (int amount), :unit (name unit)})
+      ]
+     (hx/+ (hx/->timestamp hsql-form) (hsql/raw (format "(INTERVAL '%d' %s)" (:amount interval) (:unit interval))))))
 
 ;; ignore the schema when producing the identifier
 (defn qualified-name-components
