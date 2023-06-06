@@ -4,8 +4,8 @@
             [clojure
              [set :as set]
              [string :as str]]
-            [honeysql.core :as hsql]
-            [honeysql.helpers :as h]
+            [honey.sql :as sql]
+   									[honey.sql.helpers :as sql.helpers]
             [medley.core :as m]
             [metabase.driver.sql-jdbc
              [common :as sql-jdbc.common]]
@@ -24,12 +24,14 @@
             [metabase.query-processor.store :as qp.store]
             [metabase.query-processor.util :as qputil]
             [metabase.query-processor.util.add-alias-info :as add]
-            [metabase.util.honeysql-extensions :as hx])
+            [metabase.driver.sql.query-processor :as sql.qp]
+            [metabase.util.honey-sql-2 :as h2x])
   (:import [java.sql Connection ResultSet]))
 
 (driver/register! :sparksql-databricks, :parent :hive-like)
 
 ;;; ------------------------------------------ Custom HoneySQL Clause Impls ------------------------------------------
+
 
 (def ^:private source-table-alias
   "Default alias for all source tables. (Not for source queries; those still use the default SQL QP alias of `source`.)"
@@ -64,26 +66,23 @@
     (parent-method driver field-clause)))
 
 (defmethod sql.qp/apply-top-level-clause [:sparksql-databricks :page]
-  [_ _ honeysql-form {{:keys [items page]} :page}]
+  [_driver _clause honeysql-form {{:keys [items page]} :page}]
   (let [offset (* (dec page) items)]
     (if (zero? offset)
       ;; if there's no offset we can simply use limit
-      (h/limit honeysql-form items)
+      (sql.helpers/limit honeysql-form items)
       ;; if we need to do an offset we have to do nesting to generate a row number and where on that
-      (let [over-clause (format "row_number() OVER (%s)"
-                                (first (hsql/format (select-keys honeysql-form [:order-by])
-                                                    :allow-dashed-names? true
-                                                    :quoting :mysql)))]
-        (-> (apply h/select (map last (:select honeysql-form)))
-            (h/from (h/merge-select honeysql-form [(hsql/raw over-clause) :__rownum__]))
-            (h/where [:> :__rownum__ offset])
-            (h/limit items))))))
+      (let [over-clause [::over :%row_number (select-keys honeysql-form [:order-by])]]
+        (-> (apply sql.helpers/select (map last (:select honeysql-form)))
+            (sql.helpers/from (sql.helpers/select honeysql-form [over-clause :__rownum__]))
+            (sql.helpers/where [:> :__rownum__ [:inline offset]])
+            (sql.helpers/limit [:inline items]))))))
 
 (defmethod sql.qp/apply-top-level-clause [:sparksql-databricks :source-table]
   [driver _ honeysql-form {source-table-id :source-table}]
   (let [{table-name :name, schema :schema} (qp.store/table source-table-id)]
-    (h/from honeysql-form [(sql.qp/->honeysql driver (hx/identifier :table schema table-name))
-                           (sql.qp/->honeysql driver (hx/identifier :table-alias source-table-alias))])))
+    (sql.helpers/from honeysql-form [(sql.qp/->honeysql driver (h2x/identifier :table schema table-name))
+                                     [(sql.qp/->honeysql driver (h2x/identifier :table-alias source-table-alias))]])))
 
 
 ;;; ------------------------------------------- Other Driver Method Impls --------------------------------------------
