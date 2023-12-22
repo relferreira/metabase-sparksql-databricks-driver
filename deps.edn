@@ -3,7 +3,7 @@
 
  :deps
  {org.clojure/core.logic {:mvn/version "1.0.0"}
-  com.databricks/databricks-jdbc {:mvn/version "2.6.32"}}
+  com.databricks/databricks-jdbc {:mvn/version "2.6.36"}}
 
  :mvn/repos
  {"athena" {:url "https://s3.amazonaws.com/maven-athena"}}
