@@ -24,7 +24,7 @@
             [metabase.query-processor.store :as qp.store]
             [metabase.query-processor.util :as qputil]
             [metabase.query-processor.util.add-alias-info :as add]
-            [metabase.driver.sql.query-processor :as sql.qp]
+            [metabase.lib.metadata :as lib.metadata]
             [metabase.util.honey-sql-2 :as h2x])
   (:import [java.sql Connection ResultSet]))
 
@@ -80,7 +80,7 @@
 
 (defmethod sql.qp/apply-top-level-clause [:sparksql-databricks :source-table]
   [driver _ honeysql-form {source-table-id :source-table}]
-  (let [{table-name :name, schema :schema} (qp.store/table source-table-id)]
+  (let [{table-name :name, schema :schema} (lib.metadata/table (qp.store/metadata-provider) source-table-id)]
     (sql.helpers/from honeysql-form [(sql.qp/->honeysql driver (h2x/identifier :table schema table-name))
                                      [(sql.qp/->honeysql driver (h2x/identifier :table-alias source-table-alias))]])))
 
