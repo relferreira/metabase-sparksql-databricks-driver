@@ -42,6 +42,6 @@ driver:
     connection-properties-include-tunnel-config: false
 init:
   - step: load-namespace
-    namespace: metabase.driver.sparksql-databricks
+    namespace: metabase.driver.sparksql-databricks-v2
   - step: register-jdbc-driver
     class: metabase.driver.FixedSparkDriver
