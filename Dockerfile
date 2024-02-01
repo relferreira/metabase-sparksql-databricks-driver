@@ -36,8 +36,8 @@ WORKDIR /build/metabase
 # Now build the driver
 FROM stg_base as stg_build
 RUN clojure \
-    -Sdeps "{:aliases {:sparksql-databricks {:extra-deps {com.metabase/sparksql-databricks {:local/root \"/build/driver\"}}}}}" \
-    -X:build:sparksql-databricks \
+    -Sdeps "{:aliases {:sparksql-databricks-v2 {:extra-deps {com.metabase/sparksql-databricks {:local/root \"/build/driver\"}}}}}" \
+    -X:build:sparksql-databricks-v2 \
     build-drivers.build-driver/build-driver! \
     "{:driver :sparksql-databricks, :project-dir \"/build/driver\", :target-dir \"/build/driver/target\"}"
 

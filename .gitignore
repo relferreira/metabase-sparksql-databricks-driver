@@ -68,3 +68,5 @@ repo
 .cpcache
 .lsp
 .clj-kondo
+
+!dist/*
