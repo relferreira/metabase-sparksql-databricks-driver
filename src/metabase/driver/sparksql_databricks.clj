@@ -97,14 +97,22 @@
 
 (defn- sparksql-databricks
   "Create a database specification for a Spark SQL database."
-  [{:keys [host port db jdbc-flags]
+  [{:keys [host port http-path jdbc-flags app-id app-secret catalog db]
     :or   {host "localhost", port 10000, db "", jdbc-flags ""}
     :as   opts}]
   (merge
    {:classname   "metabase.driver.FixedSparkDriver"
     :subprotocol "databricks"
-    :subname     (str "//" host ":" port "/" db jdbc-flags)}
-   (dissoc opts :host :port :db :jdbc-flags)))
+    :subname     (str "//" host ":" port jdbc-flags)
+    :ssl         1
+    :httpPath    http-path
+    :ConnSchema  db
+    :ConnCatalog catalog
+    :AuthMech    11
+    :Auth_Flow   1
+    :OAuth2ClientId app-id
+    :OAuth2Secret app-secret}
+   (dissoc opts :host :port :db :jdbc-flags :http-path :app-id :app-secret :catalog)))
 
 (defmethod sql-jdbc.conn/connection-details->spec :sparksql-databricks
   [_ details]
@@ -114,7 +122,7 @@
                         (Integer/parseInt port)
                         port)))
       (set/rename-keys {:dbname :db})
-      (select-keys [:host :port :db :jdbc-flags :dbname])
+      (select-keys [:host :port :db :jdbc-flags :dbname :http-path :app-id :app-secret :catalog])
       sparksql-databricks
       (sql-jdbc.common/handle-additional-options details)))
 
@@ -128,9 +136,10 @@
   {:tables
    (with-open [conn (jdbc/get-connection (sql-jdbc.conn/db->pooled-connection-spec database))]
      (set
-      (for [{:keys [database tablename tab_name], table-namespace :namespace} (jdbc/query {:connection conn} ["show tables"])]
-        {:name   (or tablename tab_name) ; column name differs depending on server (SparkSQL, hive, Impala)
+      (for [{:keys [database tablename tab_name table_name table_schema], table-namespace :namespace} (jdbc/query {:connection conn} ["select * from information_schema.tables"])]
+        {:name   (or tablename tab_name table_name table_schema) ; column name differs depending on server (SparkSQL, hive, Impala)
          :schema (or (not-empty database)
+                      (not-empty table_schema)
                      (not-empty table-namespace))})))})
 
 ;; Hive describe table result has commented rows to distinguish partitions

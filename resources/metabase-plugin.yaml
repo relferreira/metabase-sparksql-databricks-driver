@@ -8,30 +8,36 @@ driver:
     abstract: true
     parent: sql-jdbc
   - name: sparksql-databricks
-    display-name: Spark SQL (Databricks)
+    display-name: Databricks
     lazy-load: true
     parent: hive-like
     connection-properties:
       - merge:
-          - host
-          - placeholder: "<account>.cloud.databricks.com"
+        - host
+        - placeholder: "<account>.cloud.databricks.com"
+      - name: http-path
+        display-name: HTTP Path
+        placeholder: "/sql/1.0/warehouses/<id>"
+      - name: app-id
+        display-name: App ID
+        placeholder: "9af18267-60e7-4061-b2d5-e2414af88b0b"
+      - name: app-secret
+        display-name: App Secret
+        placeholder: "doseXXXXXXXXXXXX"
+      - name: catalog
+        display-name: Catalog
+        placeholder: "<catalog-name>"
       - merge:
           - port
           - default: 443
       - merge:
           - dbname
-          - placeholder: default
-      - merge:
-          - user
-          - default: token
-      - merge:
-          - password
-          - placeholder: "<user_token>"
+          - required: false
       - advanced-options-start
       - merge:
           - additional-options
           - name: jdbc-flags
-            placeholder: ";transportMode=http;ssl=1;httpPath=<cluster-http-path>;AuthMech=3;UID=token;PWD=<token>"
+            placeholder: ";transportMode=http;ssl=1;"
       - default-advanced-options
     connection-properties-include-tunnel-config: false
 init:
