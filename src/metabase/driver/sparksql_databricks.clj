@@ -28,7 +28,7 @@
             [metabase.util.honey-sql-2 :as h2x])
   (:import [java.sql Connection ResultSet]))
 
-(driver/register! :sparksql-databricks, :parent :hive-like)
+(driver/register! :sparksql-databricks-v2, :parent :hive-like)
 
 ;;; ------------------------------------------ Custom HoneySQL Clause Impls ------------------------------------------
 
@@ -113,6 +113,8 @@
     :OAuth2ClientId app-id
     :OAuth2Secret app-secret}
    (dissoc opts :host :port :db :jdbc-flags :http-path :app-id :app-secret :catalog)))
+
+(defn sparksql-databricks-v2 [params] (sparksql-databricks params))
 
 (defmethod sql-jdbc.conn/connection-details->spec :sparksql-databricks
   [_ details]
