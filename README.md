@@ -7,7 +7,7 @@
 To build a dockerized Metabase including the Databricks driver from this repository, simply run:
 
 ```
-docker build -t metabase:0.46.6.2-db -f Dockerfile .
+docker build -t metabase:0.46.6.2-databricks -f Dockerfile .
 ```
 
 The Metabase Databricks driver gets build and included in a final Metabase docker image.
@@ -35,28 +35,30 @@ clojure -X:test
 
 - Display Name: a identification name for your database in Metabase
 - Host: your Databricks URL (adb-XXXXXXXXX.azuredatabricks.net)
-- Port: usually 443
-- Database Name: usually `default`
-- Username: usually `token`
-- Password: personal access token created in Databrick's dashboard
-- Additional JDBC connection string options:
-  - SQL Warehouse (Endpoint): you can find it at `/sql/warehouses/` at the `Connection details` tab. It should have the following pattern: `;transportMode=http;ssl=1;AuthMech=3;httpPath=/sql/1.0/endpoints/<SQL WAREHOUSE ID>;UID=token;PWD=<ACCESS TOKEN>`
-  - Cluster Endpoint: you will find it at your cluster's details page. It should have the following pattern: `;transportMode=http;ssl=1;httpPath=sql/protocolv1/o/<ORG ID>/<CLUSTER ID>;AuthMech=3;UID=token;PWD=<ACCESS TOKEN>`
+- Databricks client id: The id of your service-principal
+- Databricks OAuth Secret: Your OAuth2 secret for the service-principal
+- HTTP Path: The path to the SQL Warehouse, usually `/sql/1.0/endpoints/***`
+- Catalog : The name of the catalog you want to connect to
+- Schema : If you want to restrict the connection to a specific database / schema
+- Port : 443 by default, located in advanced settings
+- Additional JDBC connection string options (SSL, transportMode etc...), located in advanced settings
 
 ## Building the driver (the fast way)
 
 Use the `Dockerfile` on this repo:
 
 ```bash
-docker build -t metabase:metabase-head-databricks-1.3.0 .
+docker build -t metabase:0.46.6.2-databricks .
 ```
+
+This image contains both the original and updated driver versions
 
 And you can deploy to some docker registry of your own and use the image!
 
 Example of running:
 
 ```bash
-docker run -d -p 3000:3000 --name metabase metabase:metabase-head-databricks-1.6.0
+docker run -d -p 3000:3000 --name metabase metabase:0.46.6.2-databricks
 ```
 
 And access `http://localhost:3000`.
