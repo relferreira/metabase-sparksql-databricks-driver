@@ -1,4 +1,4 @@
-(ns metabase.driver.sparksql-databricks
+(ns metabase.driver.sparksql-databricks-v2
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [clojure
@@ -28,7 +28,7 @@
             [metabase.util.honey-sql-2 :as h2x])
   (:import [java.sql Connection ResultSet]))
 
-(driver/register! :sparksql-databricks, :parent :hive-like)
+(driver/register! :sparksql-databricks-v2, :parent :hive-like)
 
 ;;; ------------------------------------------ Custom HoneySQL Clause Impls ------------------------------------------
 
@@ -44,7 +44,7 @@
 ;;     ((get-method sql.qp/->honeysql [:hive-like :field]) driver field)))
 
 
-(defmethod sql.qp/->honeysql [:sparksql-databricks :field]
+(defmethod sql.qp/->honeysql [:sparksql-databricks-v2 :field]
   [driver [_ _ {::params.substitution/keys [compiling-field-filter?]} :as field-clause]]
   ;; use [[source-table-alias]] instead of the usual `schema.table` to qualify fields e.g. `t1.field` instead of the
   ;; normal `schema.table.field`
@@ -65,7 +65,7 @@
                                                        :else                   source-table)))]
     (parent-method driver field-clause)))
 
-(defmethod sql.qp/apply-top-level-clause [:sparksql-databricks :page]
+(defmethod sql.qp/apply-top-level-clause [:sparksql-databricks-v2 :page]
   [_driver _clause honeysql-form {{:keys [items page]} :page}]
   (let [offset (* (dec page) items)]
     (if (zero? offset)
@@ -78,7 +78,7 @@
             (sql.helpers/where [:> :__rownum__ [:inline offset]])
             (sql.helpers/limit [:inline items]))))))
 
-(defmethod sql.qp/apply-top-level-clause [:sparksql-databricks :source-table]
+(defmethod sql.qp/apply-top-level-clause [:sparksql-databricks-v2 :source-table]
   [driver _ honeysql-form {source-table-id :source-table}]
   (let [{table-name :name, schema :schema} (lib.metadata/table (qp.store/metadata-provider) source-table-id)]
     (sql.helpers/from honeysql-form [(sql.qp/->honeysql driver (h2x/identifier :table schema table-name))
@@ -95,18 +95,26 @@
 ;;     :ssl                           true}
 ;;    (dissoc opts :host :port :db :jdbc-flags)))
 
-(defn- sparksql-databricks
+(defn- sparksql-databricks-v2
   "Create a database specification for a Spark SQL database."
-  [{:keys [host port db jdbc-flags]
+  [{:keys [host port http-path jdbc-flags app-id app-secret catalog db]
     :or   {host "localhost", port 10000, db "", jdbc-flags ""}
     :as   opts}]
   (merge
    {:classname   "metabase.driver.FixedSparkDriver"
     :subprotocol "databricks"
-    :subname     (str "//" host ":" port "/" db jdbc-flags)}
-   (dissoc opts :host :port :db :jdbc-flags)))
+    :subname     (str "//" host ":" port jdbc-flags)
+    :ssl         1
+    :httpPath    http-path
+    :ConnSchema  db
+    :ConnCatalog catalog
+    :AuthMech    11
+    :Auth_Flow   1
+    :OAuth2ClientId app-id
+    :OAuth2Secret app-secret}
+   (dissoc opts :host :port :db :jdbc-flags :http-path :app-id :app-secret :catalog)))
 
-(defmethod sql-jdbc.conn/connection-details->spec :sparksql-databricks
+(defmethod sql-jdbc.conn/connection-details->spec :sparksql-databricks-v2
   [_ details]
   (-> details
       (update :port (fn [port]
@@ -114,8 +122,8 @@
                         (Integer/parseInt port)
                         port)))
       (set/rename-keys {:dbname :db})
-      (select-keys [:host :port :db :jdbc-flags :dbname])
-      sparksql-databricks
+      (select-keys [:host :port :db :jdbc-flags :dbname :http-path :app-id :app-secret :catalog])
+      sparksql-databricks-v2
       (sql-jdbc.common/handle-additional-options details)))
 
 (defn- dash-to-underscore [s]
@@ -123,14 +131,15 @@
     (str/replace s #"-" "_")))
 
 ;; workaround for SPARK-9686 Spark Thrift server doesn't return correct JDBC metadata
-(defmethod driver/describe-database :sparksql-databricks
+(defmethod driver/describe-database :sparksql-databricks-v2
   [_ database]
   {:tables
    (with-open [conn (jdbc/get-connection (sql-jdbc.conn/db->pooled-connection-spec database))]
      (set
-      (for [{:keys [database tablename tab_name], table-namespace :namespace} (jdbc/query {:connection conn} ["show tables"])]
-        {:name   (or tablename tab_name) ; column name differs depending on server (SparkSQL, hive, Impala)
+      (for [{:keys [database tablename tab_name table_name table_schema], table-namespace :namespace} (jdbc/query {:connection conn} ["select * from information_schema.tables"])]
+        {:name   (or tablename tab_name table_name table_schema) ; column name differs depending on server (SparkSQL, hive, Impala)
          :schema (or (not-empty database)
+                      (not-empty table_schema)
                      (not-empty table-namespace))})))})
 
 ;; Hive describe table result has commented rows to distinguish partitions
@@ -140,7 +149,7 @@
           [col_name data_type]))
 
 ;; workaround for SPARK-9686 Spark Thrift server doesn't return correct JDBC metadata
-(defmethod driver/describe-table :sparksql-databricks
+(defmethod driver/describe-table :sparksql-databricks-v2
   [driver database {table-name :name, schema :schema}]
   {:name   table-name
    :schema schema
@@ -160,10 +169,10 @@
            :database-position idx}))))})
 
 ;; bound variables are not supported in Spark SQL (maybe not Hive either, haven't checked)
-(defmethod driver/execute-reducible-query :sparksql-databricks
+(defmethod driver/execute-reducible-query :sparksql-databricks-v2
   [driver {{sql :query, :keys [params], :as inner-query} :native, :as outer-query} context respond]
   (let [inner-query (-> (assoc inner-query
-                               :remark (qputil/query->remark :sparksql-databricks outer-query)
+                               :remark (qputil/query->remark :sparksql-databricks-v2 outer-query)
                                :query  (if (seq params)
                                          (binding [hive-like/*param-splice-style* :paranoid]
                                            (unprepare/unprepare driver (cons sql params)))
@@ -177,7 +186,7 @@
 ;; 2.  SparkSQL doesn't support session timezones (at least our driver doesn't support it)
 ;; 3.  SparkSQL doesn't support making connections read-only
 ;; 4.  SparkSQL doesn't support setting the default result set holdability
-(defmethod sql-jdbc.execute/do-with-connection-with-options :sparksql-databricks
+(defmethod sql-jdbc.execute/do-with-connection-with-options :sparksql-databricks-v2
   [driver db-or-id-or-spec options f]
   (sql-jdbc.execute/do-with-resolved-connection
    driver
@@ -189,7 +198,7 @@
      (f conn))))
 
 ;; 1.  SparkSQL doesn't support setting holdability type to `CLOSE_CURSORS_AT_COMMIT`
-(defmethod sql-jdbc.execute/prepared-statement :sparksql-databricks
+(defmethod sql-jdbc.execute/prepared-statement :sparksql-databricks-v2
   [driver ^Connection conn ^String sql params]
   (let [stmt (.prepareStatement conn sql
                                 ResultSet/TYPE_FORWARD_ONLY
@@ -203,7 +212,7 @@
         (throw e)))))
 
 ;; the current HiveConnection doesn't support .createStatement
-(defmethod sql-jdbc.execute/statement-supported? :sparksql-databricks [_] false)
+(defmethod sql-jdbc.execute/statement-supported? :sparksql-databricks-v2 [_] false)
 
 (doseq [feature [:basic-aggregations
                  :binning
@@ -212,11 +221,11 @@
                  :native-parameters
                  :nested-queries
                  :standard-deviation-aggregations]]
-  (defmethod driver/supports? [:sparksql-databricks feature] [_ _] true))
+  (defmethod driver/supports? [:sparksql-databricks-v2 feature] [_ _] true))
 
 ;; only define an implementation for `:foreign-keys` if none exists already. In test extensions we define an alternate
 ;; implementation, and we don't want to stomp over that if it was loaded already
-(when-not (get (methods driver/supports?) [:sparksql-databricks :foreign-keys])
-  (defmethod driver/supports? [:sparksql-databricks :foreign-keys] [_ _] true))
+(when-not (get (methods driver/supports?) [:sparksql-databricks-v2 :foreign-keys])
+  (defmethod driver/supports? [:sparksql-databricks-v2 :foreign-keys] [_ _] true))
 
-(defmethod sql.qp/quote-style :sparksql-databricks [_] :mysql)
+(defmethod sql.qp/quote-style :sparksql-databricks-v2 [_] :mysql)

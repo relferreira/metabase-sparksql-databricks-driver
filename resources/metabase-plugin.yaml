@@ -1,5 +1,5 @@
 info:
-  name: Metabase Databricks Spark SQL Driver
+  name: Metabase Databricks Spark SQL Driver (v2)
   version: 1.0.0-SNAPSHOT
   description: Allows Metabase to connect to Databricks Spark SQL databases.
 driver:
@@ -7,35 +7,52 @@ driver:
     lazy-load: true
     abstract: true
     parent: sql-jdbc
-  - name: sparksql-databricks
-    display-name: Spark SQL (Databricks)
+  - name: sparksql-databricks-v2
+    display-name: Databricks SQL (v2)
     lazy-load: true
     parent: hive-like
     connection-properties:
       - merge:
-          - host
-          - placeholder: "<account>.cloud.databricks.com"
-      - merge:
-          - port
-          - default: 443
+        - host
+        - placeholder: "<account>.cloud.databricks.com"
+          helper-text: "The hostname of your Databricks account"
+      - name: app-id
+        display-name: Databricks client id
+        placeholder: "9af18267-60e7-4061-b2d5-e2414af88b0b"
+        required: true
+        helper-text: "The id of the service principal you generated an Oauth token for (see : https://docs.databricks.com/en/dev-tools/authentication-oauth.html)"
+      - name: app-secret
+        display-name: Databricks OAuth secret
+        placeholder: "doseXXXXXXXXXXXX"
+        required: true
+        helper-text: "The secret of the service principal you generated an Oauth token for (see : https://docs.databricks.com/en/dev-tools/authentication-oauth.html)"
+      - name: http-path
+        display-name: HTTP Path
+        placeholder: "/sql/1.0/warehouses/<id>"
+        helper-text: "The path to the Databricks SQL endpoint (see : https://docs.databricks.com/en/integrations/compute-details.html)"
+        required: true
+      - name: catalog
+        display-name: Catalog
+        placeholder: "<catalog-name>"
+        required: true
       - merge:
           - dbname
-          - placeholder: default
-      - merge:
-          - user
-          - default: token
-      - merge:
-          - password
-          - placeholder: "<user_token>"
+          - required: false
+            display-name: Schema / Database (Optional)
       - advanced-options-start
       - merge:
           - additional-options
           - name: jdbc-flags
-            placeholder: ";transportMode=http;ssl=1;httpPath=<cluster-http-path>;AuthMech=3;UID=token;PWD=<token>"
+            placeholder: ";transportMode=http;ssl=1;"
+      - merge:
+          - additional-options
+          - name: port
+            display-name: HTTP Port
+            placeholder: "443"
+            default: 443
       - default-advanced-options
-    connection-properties-include-tunnel-config: false
 init:
   - step: load-namespace
-    namespace: metabase.driver.sparksql-databricks
+    namespace: metabase.driver.sparksql-databricks-v2
   - step: register-jdbc-driver
     class: metabase.driver.FixedSparkDriver
