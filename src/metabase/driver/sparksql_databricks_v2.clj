@@ -20,7 +20,8 @@
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.driver.sql.util :as sql.u]
             [metabase.driver.sql.util.unprepare :as unprepare]
-            [metabase.mbql.util :as mbql.u]
+            [metabase.legacy-mbql.util :as mbql.u]
+            [metabase.lib.metadata :as lib.metadata]
             [metabase.query-processor.store :as qp.store]
             [metabase.query-processor.util :as qputil]
             [metabase.query-processor.util.add-alias-info :as add]
@@ -214,18 +215,24 @@
 ;; the current HiveConnection doesn't support .createStatement
 (defmethod sql-jdbc.execute/statement-supported? :sparksql-databricks-v2 [_] false)
 
-(doseq [feature [:basic-aggregations
-                 :binning
-                 :expression-aggregations
-                 :expressions
-                 :native-parameters
-                 :nested-queries
-                 :standard-deviation-aggregations]]
-  (defmethod driver/supports? [:sparksql-databricks-v2 feature] [_ _] true))
+(doseq [[feature supported?] {:basic-aggregations               true
+                              :binning                          true
+                              :expression-aggregations          true
+                              :expressions                      true
+                              :native-parameters                true
+                              :nested-queries                   true
+                              :standard-deviation-aggregations  true
+                              :foreign-keys                     true
+                              :full-join                        true
+                              :right-join                       true
+                              :left-join                        true
+                              :inner-join                       true
+                              :window-functions/offset          true}]
+  (defmethod driver/database-supports? [:sparksql-databricks-v2 feature] [_driver _feature _db] true))
 
 ;; only define an implementation for `:foreign-keys` if none exists already. In test extensions we define an alternate
 ;; implementation, and we don't want to stomp over that if it was loaded already
-(when-not (get (methods driver/supports?) [:sparksql-databricks-v2 :foreign-keys])
-  (defmethod driver/supports? [:sparksql-databricks-v2 :foreign-keys] [_ _] false))
+(when-not (get (methods driver/database-supports?) [:sparksql-databricks-v2 :foreign-keys])
+  (defmethod driver/database-supports? [:sparksql-databricks-v2 :foreign-keys] [_ _] true))
 
 (defmethod sql.qp/quote-style :sparksql-databricks-v2 [_] :mysql)
