@@ -75,9 +75,6 @@
     #"map"              :type/Dictionary
     #".*"               :type/*))
 
-(defmethod sql.qp/honey-sql-version :hive-like
-  [_driver]
-  2)
 
 (defmethod sql.qp/current-datetime-honeysql-form :hive-like
   [_]
