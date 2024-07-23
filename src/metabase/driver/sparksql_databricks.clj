@@ -20,7 +20,8 @@
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.driver.sql.util :as sql.u]
             [metabase.driver.sql.util.unprepare :as unprepare]
-            [metabase.mbql.util :as mbql.u]
+            [metabase.legacy-mbql.util :as mbql.u]
+            [metabase.lib.metadata :as lib.metadata]
             [metabase.query-processor.store :as qp.store]
             [metabase.query-processor.util :as qputil]
             [metabase.query-processor.util.add-alias-info :as add]
@@ -80,7 +81,7 @@
 
 (defmethod sql.qp/apply-top-level-clause [:sparksql-databricks :source-table]
   [driver _ honeysql-form {source-table-id :source-table}]
-  (let [{table-name :name, schema :schema} (qp.store/table source-table-id)]
+  (let [{table-name :name, schema :schema} (lib.metadata/table (qp.store/metadata-provider) source-table-id)]
     (sql.helpers/from honeysql-form [(sql.qp/->honeysql driver (h2x/identifier :table schema table-name))
                                      [(sql.qp/->honeysql driver (h2x/identifier :table-alias source-table-alias))]])))
 
@@ -205,18 +206,24 @@
 ;; the current HiveConnection doesn't support .createStatement
 (defmethod sql-jdbc.execute/statement-supported? :sparksql-databricks [_] false)
 
-(doseq [feature [:basic-aggregations
-                 :binning
-                 :expression-aggregations
-                 :expressions
-                 :native-parameters
-                 :nested-queries
-                 :standard-deviation-aggregations]]
-  (defmethod driver/supports? [:sparksql-databricks feature] [_ _] true))
+(doseq [[feature supported?] {:basic-aggregations               true
+                              :binning                          true
+                              :expression-aggregations          true
+                              :expressions                      true
+                              :native-parameters                true
+                              :nested-queries                   true
+                              :standard-deviation-aggregations  true
+                              :foreign-keys                     true
+                              :full-join                        true
+                              :right-join                       true
+                              :left-join                        true
+                              :inner-join                       true
+                              :window-functions/offset          true}]
+  (defmethod driver/database-supports? [:sparksql-databricks feature] [_driver _feature _db] true))
 
 ;; only define an implementation for `:foreign-keys` if none exists already. In test extensions we define an alternate
 ;; implementation, and we don't want to stomp over that if it was loaded already
-(when-not (get (methods driver/supports?) [:sparksql-databricks :foreign-keys])
-  (defmethod driver/supports? [:sparksql-databricks :foreign-keys] [_ _] true))
+(when-not (get (methods driver/database-supports?) [:sparksql-databricks :foreign-keys])
+  (defmethod driver/database-supports? [:sparksql-databricks :foreign-keys] [_ _] true))
 
 (defmethod sql.qp/quote-style :sparksql-databricks [_] :mysql)
