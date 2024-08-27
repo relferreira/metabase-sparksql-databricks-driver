@@ -1,5 +1,5 @@
 #Copied from https://github.com/dacort/metabase-athena-driver/blob/d7572cd99551ea998a011f8f00a1e39c1eaa59b8/Dockerfile
-ARG METABASE_VERSION=v0.48.6
+ARG METABASE_VERSION=v0.50.12
 
 FROM clojure:openjdk-11-tools-deps-slim-buster AS stg_base
 
