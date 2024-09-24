@@ -25,7 +25,6 @@
             [metabase.query-processor.store :as qp.store]
             [metabase.query-processor.util :as qputil]
             [metabase.query-processor.util.add-alias-info :as add]
-            [metabase.lib.metadata :as lib.metadata]
             [metabase.util.honey-sql-2 :as h2x])
   (:import [java.sql Connection ResultSet]))
 
