@@ -227,7 +227,7 @@
                               :left-join                        true
                               :inner-join                       true
                               :window-functions/offset          true}]
-  (defmethod driver/database-supports? [:sparksql-databricks-v2 feature] [_driver _feature _db] true))
+  (defmethod driver/database-supports? [:sparksql-databricks-v2 feature] [_driver _feature _db] supported?))
 
 ;; only define an implementation for `:foreign-keys` if none exists already. In test extensions we define an alternate
 ;; implementation, and we don't want to stomp over that if it was loaded already
